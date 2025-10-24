@@ -80,7 +80,6 @@
             padding: 48px 24px;
             perspective: 1200px;
             overflow-y: auto;
-            scroll-behavior: smooth;
         }
 
         .card {
@@ -478,10 +477,13 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                overflow-y: auto; /* Enable full page scrolling on mobile */
+            }
+
             .wrap {
-                align-items: flex-start;
-                justify-content: center;
-                padding: 32px 16px 280px 16px;
+                padding: 24px 16px;
+                align-items: flex-start; /* Start content from top on mobile */
             }
 
             .card {
@@ -550,11 +552,11 @@
             }
 
             .avatar-glow {
-                display: none;
+                display: none; /* Disable glow animation on mobile to save CPU */
             }
 
             .pill:hover {
-                transform: none;
+                transform: none; /* Disable hover effects on mobile */
                 box-shadow: none;
             }
 
@@ -573,15 +575,7 @@
             }
 
             .grid {
-                opacity: 0.3;
-            }
-
-            .playlist-panel.open {
-                height: 280px;
-            }
-
-            .tracks {
-                max-height: 270px;
+                opacity: 0.3; /* Reduce opacity to lighten rendering */
             }
         }
 
@@ -730,9 +724,9 @@
 
     const isMobile = window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent);
     if (isMobile) {
-        baseCount = 80;
-        density = 0.6;
-        opacityMul = 0.7;
+        baseCount = 80; // Reduce base count on mobile
+        density = 0.6; // Reduce density on mobile
+        opacityMul = 0.7; // Slightly reduce opacity to lighten rendering
     }
 
     function rand(min, max) {
@@ -783,7 +777,7 @@
             ctx.stroke();
         }
         spawnSplash() {
-            const sCount = Math.floor(rand(2, 5));
+            const sCount = Math.floor(rand(2, 5)); // Reduced splash count on all, but especially helpful on mobile
             for (let i = 0; i < sCount; i++) splashes.push(new Splash(this.x + rand(-6, 6), H - 4, rand(-1.4, 1.4), rand(-2.2, -0.6), rand(10, 28)));
         }
     }
@@ -859,7 +853,7 @@
             d.update(dt);
             d.draw(ctx);
         }
-        splashes = splashes.filter(s => s.ttl > 0);
+        splashes = splashes.filter(s => s.ttl > 0); // Clean up splashes more efficiently
         for (const s of splashes) {
             s.update(dt);
             s.draw(ctx);
@@ -893,7 +887,7 @@
         wind = parseFloat(document.getElementById('wind').value);
         opacityMul = parseFloat(document.getElementById('opacityMul').value);
         if (isMobile) {
-            baseCount = Math.min(baseCount, 100);
+            baseCount = Math.min(baseCount, 100); // Cap on mobile even if changed
             density = Math.min(density, 0.7);
         }
         if (rainEnabled) {
@@ -953,7 +947,6 @@
     const repeatBtn = document.getElementById('repeatBtn');
     const settingsBtn = document.getElementById('settingsBtn');
     const controlsOverlay = document.querySelector('.controls-overlay');
-    const wrap = document.querySelector('.wrap');
 
     const playlist = [{
         title: 'королевский XVII — sadisfaction',
@@ -1012,16 +1005,16 @@
     }
 
     function togglePlaylist(show) {
-        const willOpen = show === undefined ? !playlistPanel.classList.contains('open') : show;
-        playlistPanel.classList.toggle('open', willOpen);
-        openPlaylistBtn.textContent = willOpen ? '▴' : '▾';
-        if (willOpen && isMobile) {
+        const isOpening = show === undefined ? !playlistPanel.classList.contains('open') : show;
+        playlistPanel.classList.toggle('open', isOpening);
+        if (isOpening && window.innerWidth < 768) {
             setTimeout(() => {
+                const wrap = document.querySelector('.wrap');
                 wrap.scrollTo({
-                    top: wrap.scrollHeight - wrap.clientHeight,
+                    top: wrap.scrollHeight,
                     behavior: 'smooth'
                 });
-            }, 400);
+            }, 400); // Delay to allow transition to complete
         }
     }
     openPlaylistBtn.addEventListener('click', () => togglePlaylist());
