@@ -566,6 +566,10 @@
                 min-width: 48px;
                 color: #fff !important;
             }
+            
+            #playBtn.play {
+                color: #fff !important;
+            }
 
             #curTrackTitle {
                 order: -1;
@@ -749,7 +753,7 @@
                         <h4 id="musicTitle"><i class="fas fa-music"></i> Музыка</h4>
                         <div class="music-row">
                             <button class="play-btn" id="prevBtn" title="Предыдущий трек"><i class="fas fa-backward"></i></button>
-                            <button class="play-btn" id="playBtn" title="Воспроизвести/Пауза">▶</button>
+                            <button class="play-btn" id="playBtn" title="Воспроизвести/Пауза"><i class="fas fa-play"></i></button>
                             <button class="play-btn" id="nextBtn" title="Следующий трек"><i class="fas fa-forward"></i></button>
                             <button class="play-btn" id="repeatBtn" title="Повторять трек"><i class="fas fa-repeat"></i></button>
                             <div id="curTrackTitle"></div>
@@ -1107,8 +1111,8 @@
         if (audio.paused) audio.play().catch(() => {});
         else audio.pause();
     });
-    audio.addEventListener('play', () => playBtn.textContent = '⏸');
-    audio.addEventListener('pause', () => playBtn.textContent = '▶');
+    audio.addEventListener('play', () => playBtn.innerHTML = '<i class="fas fa-pause"></i>');
+    audio.addEventListener('pause', () => playBtn.innerHTML = '<i class="fas fa-play"></i>');
     audio.addEventListener('timeupdate', () => {
         if (!audio.duration || isNaN(audio.duration)) return;
         const pct = (audio.currentTime / audio.duration) * 100;
@@ -1161,6 +1165,8 @@
     vol.value = 0.8;
     audio.volume = 0.8;
     volNum.textContent = '80%';
+
+
 
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') {
