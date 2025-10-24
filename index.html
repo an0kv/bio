@@ -567,6 +567,10 @@
                 color: #fff !important;
             }
 
+            #playBtn.pause {
+                color: #fff !important;
+            }
+
             #curTrackTitle {
                 order: -1;
                 flex-basis: 100%;
@@ -1107,8 +1111,14 @@
         if (audio.paused) audio.play().catch(() => {});
         else audio.pause();
     });
-    audio.addEventListener('play', () => playBtn.textContent = '⏸');
-    audio.addEventListener('pause', () => playBtn.textContent = '▶');
+    audio.addEventListener('play', () => {
+        playBtn.textContent = '⏸';
+        playBtn.classList.add('pause');
+    });
+    audio.addEventListener('pause', () => {
+        playBtn.textContent = '▶';
+        playBtn.classList.remove('pause');
+    });
     audio.addEventListener('timeupdate', () => {
         if (!audio.duration || isNaN(audio.duration)) return;
         const pct = (audio.currentTime / audio.duration) * 100;
