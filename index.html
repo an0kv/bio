@@ -1111,8 +1111,11 @@
         if (audio.paused) audio.play().catch(() => {});
         else audio.pause();
     });
+
+    // ИЗМЕНЕНИЕ ЗДЕСЬ: замена textContent на innerHTML с иконками
     audio.addEventListener('play', () => playBtn.innerHTML = '<i class="fas fa-pause"></i>');
     audio.addEventListener('pause', () => playBtn.innerHTML = '<i class="fas fa-play"></i>');
+    
     audio.addEventListener('timeupdate', () => {
         if (!audio.duration || isNaN(audio.duration)) return;
         const pct = (audio.currentTime / audio.duration) * 100;
@@ -1165,8 +1168,6 @@
     vol.value = 0.8;
     audio.volume = 0.8;
     volNum.textContent = '80%';
-
-
 
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') {
