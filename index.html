@@ -545,6 +545,33 @@
                 bottom: 10px;
                 right: 10px;
             }
+
+            .avatar-glow {
+                display: none; /* Disable glow animation on mobile to save CPU */
+            }
+
+            .pill:hover {
+                transform: none; /* Disable hover effects on mobile */
+                box-shadow: none;
+            }
+
+            .link-btn:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            #openPlaylistBtn:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .play-btn:hover {
+                transform: none;
+            }
+
+            .grid {
+                opacity: 0.3; /* Reduce opacity to lighten rendering */
+            }
         }
 
         .fa,
@@ -562,6 +589,15 @@
             top: 10%;
             transform: rotate(-8deg);
             pointer-events: none;
+        }
+
+        #toggleRainBtn {
+            padding: 4px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -658,6 +694,7 @@
             <div class="row"><label>Кол-во</label><input id="count" type="range" min="50" max="700" step="10" value="220"></div>
             <div class="row"><label>Ветер</label><input id="wind" type="range" min="-2" max="2" step="0.1" value="0.0"></div>
             <div class="row"><label>Яркость</label><input id="opacityMul" type="range" min="0.2" max="1.8" step="0.05" value="1"></div>
+            <div class="row"><label>Дождь</label><button id="toggleRainBtn">Выкл</button></div>
             <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:8px 0">
             <div style="font-weight:800;margin-bottom:6px">Плеер</div>
             <div class="row"><label>Громкость</label><input id="volume" type="range" min="0" max="1" step="0.01" value="0.8"><div class="vol-num" id="volNum">80%</div></div>
@@ -679,6 +716,13 @@
     let density = 1.0;
     let wind = 0.0;
     let opacityMul = 1.0;
+
+    const isMobile = window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+        baseCount = 80; // Reduce base count on mobile
+        density = 0.6; // Reduce density on mobile
+        opacityMul = 0.7; // Slightly reduce opacity to lighten rendering
+    }
 
     function rand(min, max) {
         return Math.random() * (max - min) + min
@@ -728,7 +772,7 @@
             ctx.stroke();
         }
         spawnSplash() {
-            const sCount = Math.floor(rand(3, 7));
+            const sCount = Math.floor(rand(2, 5)); // Reduced splash count on all, but especially helpful on mobile
             for (let i = 0; i < sCount; i++) splashes.push(new Splash(this.x + rand(-6, 6), H - 4, rand(-1.4, 1.4), rand(-2.2, -0.6), rand(10, 28)));
         }
     }
@@ -762,6 +806,8 @@
     let drops = [];
     let splashes = [];
     let last = performance.now();
+    let rafId = null;
+    let rainEnabled = true;
 
     function setupRain() {
         drops = [];
@@ -786,11 +832,14 @@
     function resize() {
         W = canvas.width = innerWidth;
         H = canvas.height = innerHeight;
-        setupRain();
+        if (rainEnabled) {
+            setupRain();
+        }
     }
     window.addEventListener('resize', resize);
 
     function animate(now) {
+        if (!rainEnabled) return;
         const dt = Math.min(4, (now - last) / 16);
         last = now;
         ctx.clearRect(0, 0, W, H);
@@ -799,14 +848,32 @@
             d.update(dt);
             d.draw(ctx);
         }
-        for (let i = splashes.length - 1; i >= 0; i--) {
-            const s = splashes[i];
+        splashes = splashes.filter(s => s.ttl > 0); // Clean up splashes more efficiently
+        for (const s of splashes) {
             s.update(dt);
-            if (s.ttl <= 0) splashes.splice(i, 1);
-            else s.draw(ctx);
+            s.draw(ctx);
         }
         ctx.globalCompositeOperation = 'source-over';
-        requestAnimationFrame(animate);
+        rafId = requestAnimationFrame(animate);
+    }
+
+    function toggleRain() {
+        rainEnabled = !rainEnabled;
+        const toggleRainBtn = document.getElementById('toggleRainBtn');
+        toggleRainBtn.textContent = rainEnabled ? 'Выкл' : 'Вкл';
+        if (rainEnabled) {
+            setupRain();
+            last = performance.now();
+            rafId = requestAnimationFrame(animate);
+        } else {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+            ctx.clearRect(0, 0, W, H);
+            drops = [];
+            splashes = [];
+        }
     }
 
     function applySettings() {
@@ -814,12 +881,20 @@
         baseCount = parseInt(document.getElementById('count').value, 10);
         wind = parseFloat(document.getElementById('wind').value);
         opacityMul = parseFloat(document.getElementById('opacityMul').value);
-        setupRain();
+        if (isMobile) {
+            baseCount = Math.min(baseCount, 100); // Cap on mobile even if changed
+            density = Math.min(density, 0.7);
+        }
+        if (rainEnabled) {
+            setupRain();
+        }
     }
     ['density', 'count', 'wind', 'opacityMul'].forEach(id => document.getElementById(id).addEventListener('input', applySettings));
 
     setupRain();
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+
+    document.getElementById('toggleRainBtn').addEventListener('click', toggleRain);
 
     const card = document.querySelector('.card');
     window.addEventListener('mousemove', (e) => {
@@ -975,10 +1050,10 @@
     progressContainer.addEventListener('touchstart', (e) => {
         isSeeking = true;
         seek(e);
-    });
+    }, { passive: false });
     document.addEventListener('touchmove', (e) => {
         if (isSeeking) seek(e);
-    });
+    }, { passive: false });
     document.addEventListener('touchend', () => {
         isSeeking = false;
     });
