@@ -903,7 +903,7 @@
             return;
         }
         const rx = (e.clientX / window.innerWidth - 0.5) * 8;
-        const ry = (e.clientY / window.innerHeight - 0.5) * 9;
+        const ry = (e.clientY / window.innerHeight - 0.5) *9;
         card.style.transform = `rotateY(${rx}deg) rotateX(${-ry}deg)`;
     });
 
@@ -1000,7 +1000,17 @@
     }
 
     function togglePlaylist(show) {
-        playlistPanel.classList.toggle('open', show === undefined ? !playlistPanel.classList.contains('open') : show);
+        const isOpening = show === undefined ? !playlistPanel.classList.contains('open') : show;
+        playlistPanel.classList.toggle('open', isOpening);
+        if (isOpening && window.innerWidth < 768) {
+            setTimeout(() => {
+                const wrap = document.querySelector('.wrap');
+                wrap.scrollTo({
+                    top: wrap.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 400); // Delay to allow transition to complete
+        }
     }
     openPlaylistBtn.addEventListener('click', () => togglePlaylist());
 
